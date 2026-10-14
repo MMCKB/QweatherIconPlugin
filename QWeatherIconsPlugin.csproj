@@ -1,0 +1,53 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net8.0;net10.0</TargetFrameworks>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <PlatformTarget>x64</PlatformTarget>
+    <EnableDynamicLoading>True</EnableDynamicLoading>
+    <AssemblyName>QWeatherIconsPlugin</AssemblyName>
+    <RootNamespace>QWeatherIconsPlugin</RootNamespace>
+    <Version>1.0.0.0</Version>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <!--
+    ClassIsland 2.1.1 起迁移到 .NET 10 + Avalonia 12；2.0.x ~ 2.1.0 为 .NET 8 + Avalonia 11。
+    两个 API 世代二进制不兼容，因此按目标框架分别引用对应版本的插件 SDK。
+
+    .NET 的程序集绑定只允许「引用低版本、运行在高版本」，反向会抛 FileNotFoundException，
+    所以 net8.0 一律按最低支持版本 2.0.4 编译，这样 2.0.4 ~ 2.1.0 都能加载。
+  -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net10.0'">
+    <PackageReference Include="ClassIsland.PluginSdk" Version="2.1.1">
+      <ExcludeAssets>runtime; native</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)' == 'net8.0'">
+    <PackageReference Include="ClassIsland.PluginSdk" Version="2.0.0.1">
+      <ExcludeAssets>runtime; native</ExcludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="manifest.yml" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="README.md" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="icon.png" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="LICENSE" CopyToOutputDirectory="PreserveNewest" />
+    <None Update="THIRD-PARTY-NOTICES.md" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="IconRenderTest" />
+  </ItemGroup>
+
+  <!-- tests/ 下是独立的验证工程，不能被插件工程的默认通配符收进来 -->
+  <ItemGroup>
+    <Compile Remove="tests\**" />
+    <EmbeddedResource Remove="tests\**" />
+    <None Remove="tests\**" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,122 @@
+name: 构建并发布插件包
+
+# 只面向 ClassIsland 2.0.x ~ 2.1.0（.NET 8 + Avalonia 11）构建 net8 包。
+# Tag 必须严格符合 a.b.c.d，否则 ClassIsland 插件索引生成器无法识别版本。
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+.[0-9]+'
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: '发布版本号（严格 a.b.c.d 格式，不要加 v 前缀）'
+        required: true
+        default: '1.0.0.0'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 安装 .NET 8 SDK
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: 安装 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: 确定版本号
+        shell: pwsh
+        run: |
+          $tag = if ('${{ github.event_name }}' -eq 'workflow_dispatch') {
+            '${{ github.event.inputs.tag }}'
+          } else {
+            '${{ github.ref_name }}'
+          }
+          if ($tag -notmatch '^\d+\.\d+\.\d+\.\d+$') {
+            throw "Tag 必须是严格的 a.b.c.d 格式，当前为：$tag"
+          }
+          Write-Host "版本号：$tag"
+          "RELEASE_TAG=$tag" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+      - name: 构建（仅 net8.0）
+        run: dotnet build QWeatherIconsPlugin.csproj -c Release -f net8.0
+
+      - name: 打包为 .cipx
+        run: python tools/pack.py --only net8.0
+
+      - name: 生成 MD5 校验信息
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $pkg = Get-ChildItem -Path ./cipx -Filter *.cipx | Select-Object -First 1
+          if (-not $pkg) { throw "未找到 .cipx 产物" }
+
+          $md5 = (Get-FileHash -Path $pkg.FullName -Algorithm MD5).Hash.ToLower()
+          Write-Host "包：$($pkg.Name)   MD5：$md5"
+
+          # ClassIsland 索引生成器约定的校验信息格式
+          $machineLine = "<!-- CLASSISLAND_PKG_MD5 {`"$($pkg.Name)`": `"$md5`" -->"
+
+          $notes = @(
+            $machineLine
+            ""
+            "## 和风天气图标 ${{ env.RELEASE_TAG }}"
+            ""
+            "| 项目 | 值 |"
+            "|---|---|"
+            "| 插件包 | ``$($pkg.Name)`` |"
+            "| MD5 | ``$md5`` |"
+            "| 大小 | $([math]::Round($pkg.Length / 1KB, 1)) KB |"
+            "| 适用 | ClassIsland 2.0.0 ~ 2.1.1+ |"
+            ""
+            "### 安装"
+            ""
+            "1. 下载 ``$($pkg.Name)``"
+            "2. 在 ClassIsland 中打开【应用设置 → 插件】，把 .cipx 文件拖入插件页面"
+            "3. 重启 ClassIsland，到【应用设置 → 天气 → 天气图标包】选择「和风天气（线框）」或「（填充）」"
+            ""
+            "> 天气图标素材来自 [和风天气图标](https://icons.qweather.com)，"
+            "> 版权所有 © QWeather，采用 CC BY 4.0 许可。详见仓库中的 THIRD-PARTY-NOTICES.md。"
+          )
+
+          Set-Content -Path ./cipx/RELEASE_NOTES.md -Value $notes -Encoding utf8
+          if (-not (Test-Path ./cipx/RELEASE_NOTES.md)) { throw "校验信息文件未生成" }
+          Get-Content ./cipx/RELEASE_NOTES.md | Select-Object -First 3
+
+      - name: 上传构建产物（便于排查）
+        uses: actions/upload-artifact@v4
+        with:
+          name: cipx
+          path: ./cipx/*.cipx
+
+      - name: 创建 GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $assets = @()
+          $assets += (Get-ChildItem ./cipx -Filter *.cipx).FullName
+          # 许可文件随 Release 一同分发（GPL-3.0 代码 + CC BY 4.0 素材署名）
+          $assets += (Resolve-Path ./LICENSE).Path
+          $assets += (Resolve-Path ./THIRD-PARTY-NOTICES.md).Path
+
+          gh release create "$env:RELEASE_TAG" `
+            --title "和风天气图标 $env:RELEASE_TAG" `
+            --notes-file ./cipx/RELEASE_NOTES.md `
+            --latest `
+            @assets
+
+          Write-Host "Release 已创建：$env:RELEASE_TAG"

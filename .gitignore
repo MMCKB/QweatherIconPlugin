@@ -1,0 +1,17 @@
+## 构建产物
+bin/
+obj/
+
+## IDE
+.vs/
+.idea/
+*.user
+*.suo
+
+## 插件打包输出
+cipx/
+*.cipx
+
+## 验证工程的产物
+tests/*/bin/
+tests/*/obj/

@@ -1,0 +1,12 @@
+# nonk8s
+# 插件清单文件使用 YAML 格式存储。
+id: qweather.weatherIcons
+name: 和风天气图标
+description: 使用和风天气（QWeather）图标替换天气图标，提供「线框」与「填充」两种风格。
+entranceAssembly: "QWeatherIconsPlugin.dll"
+url: https://icons.qweather.com
+author: MMCKB
+version: 1.0.0.0
+apiVersion: 2.1.1.0
+icon: icon.png
+readme: README.md

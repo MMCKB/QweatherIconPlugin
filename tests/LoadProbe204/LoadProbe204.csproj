@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>LoadProbe204</AssemblyName>
+    <RootNamespace>LoadProbe204</RootNamespace>
+    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\LoadProbe\Program.cs" />
+  </ItemGroup>
+
+  <!-- 模拟 ClassIsland 2.0.4 的宿主环境（Avalonia 11.3.13） -->
+  <ItemGroup>
+    <PackageReference Include="ClassIsland.PluginSdk" Version="2.0.4" />
+  </ItemGroup>
+
+</Project>

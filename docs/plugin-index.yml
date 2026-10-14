@@ -1,0 +1,33 @@
+# ClassIsland 插件市场索引条目
+#
+# 用法：把本文件重命名为 qweather.weatherIcons.yml（与 id 同名），
+#       放到 ClassIsland/PluginIndex 仓库的 index/plugins-v2/ 目录下，然后提 PR。
+#
+# 提交前请替换所有 <...> 占位符。
+#
+# 字段说明：https://docs.classisland.tech/dev/plugins/publishing.html
+
+id: qweather.weatherIcons
+name: 和风天气图标
+description: 使用和风天气（QWeather）图标替换天气图标，提供「线框」与「填充」两种风格。图标来自 icons.qweather.com，遵循 CC BY 4.0 许可。
+entranceAssembly: "QWeatherIconsPlugin.dll"
+url: https://github.com/MMCKB/QWeatherIconsPlugin
+version: 1.0.0.0
+apiVersion: 2.0.0.0
+author: MMCKB
+
+repoOwner: MMCKB
+repoName: QWeatherIconsPlugin
+
+# 插件项目相对仓库根目录的路径。插件工程直接作为仓库根目录时填 main/
+assetsRoot: main/
+
+# 指定要分发的插件包文件名。不填则匹配 Release 中第一个 .cipx 工件。
+# 市场只支持一个包，这里选覆盖面最广的 -net8 包（实测覆盖 ClassIsland 2.0.0 ~ 2.1.1+）。
+artifactName: QWeatherIconsPlugin-1.0.0.0-net8.cipx
+
+# 如需用 Tag 模式筛选 Release，可取消注释（默认取最新的 a.b.c.d 格式 Tag）
+# tagPattern: 1.*.*.*
+
+supportedOSPlatforms:
+- Windows
