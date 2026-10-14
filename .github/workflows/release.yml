@@ -54,6 +54,11 @@ jobs:
         run: dotnet build QWeatherIconsPlugin.csproj -c Release -f net8.0
 
       - name: 打包为 .cipx
+        # Windows runner 上 Python 的 stdout 默认不是 UTF-8，脚本里有中文输出，
+        # 因此这里显式开启 UTF-8 模式（脚本内部也会自行 reconfigure 兜底）。
+        env:
+          PYTHONUTF8: '1'
+          PYTHONIOENCODING: 'utf-8'
         run: python tools/pack.py --only net8.0
 
       - name: 生成 MD5 校验信息

@@ -25,6 +25,14 @@ import sys
 import zipfile
 from pathlib import Path
 
+# Windows 上 stdout 的默认编码不一定是 UTF-8（GitHub Actions 的 windows runner 上就不是），
+# 打印中文会直接抛 UnicodeEncodeError。这里强制切成 UTF-8。
+for _stream in (sys.stdout, sys.stderr):
+    try:
+        _stream.reconfigure(encoding="utf-8")
+    except (AttributeError, ValueError):
+        pass
+
 ROOT = Path(__file__).resolve().parent.parent
 BUILD_ROOT = ROOT / "bin" / "Release"
 DEFAULT_OUT = ROOT / "cipx"
